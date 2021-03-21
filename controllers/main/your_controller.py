@@ -32,13 +32,14 @@ class CustomController(BaseController):
         self.delta_max = math.pi/6
 
         # pid params
-        self.kp_x = 100.0
+        self.kp_x = 3000.0
         self.ki_x = 0.0
         self.kd_x = 0.0
-        self.kp_psi = 10.0
+        self.kp_psi = 15.0
         self.ki_psi = 0.0
         self.kd_psi = 0.0
 
+        #
         self.sum_error_x = 0.0
         self.error_x_old = 0.0
         self.sum_error_psi = 0.0
@@ -98,7 +99,14 @@ class CustomController(BaseController):
         Ydot_ref = (Y_next_ref - Y_ref) / delT
         xdot_ref, ydot_ref = self.global2inertial(Xdot_ref, Ydot_ref, psi)
 
-        psi_ref = wrapToPi(math.atan2(Ydot_ref, Xdot_ref))
+        X_ref2 = trajectory[nn_idx+10][0]
+        Y_ref2 = trajectory[nn_idx+10][1]
+        X_next_ref2 = trajectory[nn_idx+20][0]
+        Y_next_ref2 = trajectory[nn_idx+20][1]
+        Xdot_ref2 = (X_next_ref2 - X_ref2) / delT
+        Ydot_ref2 = (Y_next_ref2 - Y_ref2) / delT
+
+        psi_ref = wrapToPi(math.atan2(Ydot_ref2, Xdot_ref2))
 
         # ---------------|Lateral Controller|-------------------------
         """
