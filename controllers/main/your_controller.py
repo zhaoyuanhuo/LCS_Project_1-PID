@@ -32,12 +32,12 @@ class CustomController(BaseController):
         self.delta_max = math.pi/6
 
         # pid params
-        self.kp_x = 3000.0
-        self.ki_x = 0.0
-        self.kd_x = 0.0
-        self.kp_psi = 15.0
+        self.kp_x = 50000.0
+        self.ki_x = 150.0
+        self.kd_x = 150.0
+        self.kp_psi = 10.0
         self.ki_psi = 0.0
-        self.kd_psi = 0.0
+        self.kd_psi = 1.0
 
         #
         self.sum_error_x = 0.0
@@ -47,7 +47,7 @@ class CustomController(BaseController):
 
     def inertial2global(self, x, y, psi):
         # convert (x, y) from inertial frame to global frame
-        psi_ = wrapToPi(psi)
+        # psi_ = wrapToPi(psi)
         xy_inertial = np.array([[x],
                                 [y]])
         convert_mat = np.array([[math.cos(psi_), -math.sin(psi_)],
@@ -57,15 +57,18 @@ class CustomController(BaseController):
 
     def global2inertial(self, X, Y, psi):
         # convert (X, Y) from global frame to inertial frame
-        psi_ = wrapToPi(psi)
+        # psi_ = wrapToPi(psi)
         XY_global = np.array([[X],
                               [Y]])
-        convert_mat = np.array([[math.cos(psi_), -math.sin(psi_)],
-                                [math.sin(psi_), math.cos(psi_)]])
+        convert_mat = np.array([[math.cos(psi), -math.sin(psi)],
+                                [math.sin(psi), math.cos(psi)]])
         convert_mat = np.linalg.inv(convert_mat)
 
         xy_inertial = np.matmul(convert_mat, XY_global)
         return xy_inertial[0][0], xy_inertial[1][0]
+
+    def wrapAngle(self, theta):
+        return (theta+2*math.pi) % (2*math.pi)
 
     def update(self, timestep):
 
@@ -86,37 +89,30 @@ class CustomController(BaseController):
         # to calculate control inputs (F, delta).
 
         # preprocessing the reference trajectory
-        _, nn_idx = closestNode(X, Y, trajectory)
-        nn_next_idx = nn_idx + 1
-        if nn_idx == len(trajectory): # last element of the loop
-            nn_next_idx = nn_idx
+        XTE, nn_idx = closestNode(X, Y, trajectory)
+        nn_next_idx = (nn_idx + 80) % len(trajectory)
+        # if nn_idx == len(trajectory): # last element of the loop
+        #     nn_next_idx = nn_idx
 
         X_ref = trajectory[nn_idx][0]
         Y_ref = trajectory[nn_idx][1]
         X_next_ref = trajectory[nn_next_idx][0]
         Y_next_ref = trajectory[nn_next_idx][1]
-        Xdot_ref = (X_next_ref - X_ref) / delT
-        Ydot_ref = (Y_next_ref - Y_ref) / delT
+        Xdot_ref = (X_next_ref - X_ref) / (delT*50)
+        Ydot_ref = (Y_next_ref - Y_ref) / (delT*50)
         xdot_ref, ydot_ref = self.global2inertial(Xdot_ref, Ydot_ref, psi)
 
-        X_ref2 = trajectory[nn_idx+10][0]
-        Y_ref2 = trajectory[nn_idx+10][1]
-        X_next_ref2 = trajectory[nn_idx+20][0]
-        Y_next_ref2 = trajectory[nn_idx+20][1]
-        Xdot_ref2 = (X_next_ref2 - X_ref2) / delT
-        Ydot_ref2 = (Y_next_ref2 - Y_ref2) / delT
-
-        psi_ref = wrapToPi(math.atan2(Ydot_ref2, Xdot_ref2))
+        psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
         # ---------------|Lateral Controller|-------------------------
         """
         Please design your lateral controller below.
         """
-        error_psi = psi_ref - psi
+        error_psi = self.wrapAngle(psi_ref) - self.wrapAngle(psi)
         self.sum_error_x += error_psi * delT
         delta = self.kp_psi * error_psi + \
                 self.ki_psi * self.sum_error_psi + \
-                self.kd_psi * (error_psi - self.error_psi_old)
+                self.kd_psi * (error_psi - self.error_psi_old)/delT
 
         delta = clamp(delta, self.delta_min, self.delta_max)
         self.error_psi_old = error_psi
@@ -125,14 +121,17 @@ class CustomController(BaseController):
         """
         Please design your longitudinal controller below.
         """
-        error_x = xdot_ref - xdot
+        error_x = xdot_ref * 1.5 - xdot
         self.sum_error_x += error_x * delT
         F = self.kp_x * error_x + \
             self.ki_x * self.sum_error_x + \
             self.kd_x * (error_x - self.error_x_old)/delT
         F = clamp(F, self.F_min, self.F_max)
-        print("longi force: ", F)
+        # print("longi force: ", F, "XTE= ", XTE)
         self.error_x_old = error_x
+        # print("ref v= ", xdot_ref, "; real v= ", xdot)
+        # print("ref angle= ", psi_ref, "; real angle= ", psi)
+        # print("lateral angle= ", delta, "; longi force= ", F, "; XTE= ", XTE)
 
         # Return all states and calculated control inputs (F, delta)
         return X, Y, xdot, ydot, psi, psidot, F, delta
