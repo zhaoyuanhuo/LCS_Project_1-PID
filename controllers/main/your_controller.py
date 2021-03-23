@@ -36,7 +36,7 @@ class CustomController(BaseController):
         self.ki_x = 150.0
         self.kd_x = 150.0
         self.kp_psi = 10.0
-        self.ki_psi = 0.0
+        self.ki_psi = 2.0
         self.kd_psi = 1.0
 
         #
@@ -89,8 +89,10 @@ class CustomController(BaseController):
         # to calculate control inputs (F, delta).
 
         # preprocessing the reference trajectory
+        look_ahead = 105
+        speed_scale = 1.1
         XTE, nn_idx = closestNode(X, Y, trajectory)
-        nn_next_idx = (nn_idx + 80) % len(trajectory)
+        nn_next_idx = (nn_idx + look_ahead) % len(trajectory)
         # if nn_idx == len(trajectory): # last element of the loop
         #     nn_next_idx = nn_idx
 
@@ -121,7 +123,7 @@ class CustomController(BaseController):
         """
         Please design your longitudinal controller below.
         """
-        error_x = xdot_ref * 1.5 - xdot
+        error_x = xdot_ref * speed_scale - xdot
         self.sum_error_x += error_x * delT
         F = self.kp_x * error_x + \
             self.ki_x * self.sum_error_x + \
