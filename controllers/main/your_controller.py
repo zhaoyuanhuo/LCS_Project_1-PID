@@ -35,9 +35,9 @@ class CustomController(BaseController):
         self.kp_x = 50000.0
         self.ki_x = 150.0
         self.kd_x = 150.0
-        self.kp_psi = 10.0
-        self.ki_psi = 2.0
-        self.kd_psi = 1.0
+        self.kp_psi = 15.0
+        self.ki_psi = 1.0
+        self.kd_psi = 4.0
 
         #
         self.sum_error_x = 0.0
@@ -89,22 +89,36 @@ class CustomController(BaseController):
         # to calculate control inputs (F, delta).
 
         # preprocessing the reference trajectory
-        look_ahead = 105
-        speed_scale = 1.1
+        # lateral preprocessing
+        lat_look_ahead = 80
         XTE, nn_idx = closestNode(X, Y, trajectory)
-        nn_next_idx = (nn_idx + look_ahead) % len(trajectory)
-        # if nn_idx == len(trajectory): # last element of the loop
-        #     nn_next_idx = nn_idx
+        nn_lat_next_idx = nn_idx + lat_look_ahead
+        if nn_lat_next_idx>=len(trajectory)-1:
+            # print("lat near end")
+            nn_lat_next_idx = len(trajectory)-1
+        X_next_ref = trajectory[nn_lat_next_idx][0]
+        Y_next_ref = trajectory[nn_lat_next_idx][1]
+        psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
-        X_ref = trajectory[nn_idx][0]
-        Y_ref = trajectory[nn_idx][1]
-        X_next_ref = trajectory[nn_next_idx][0]
-        Y_next_ref = trajectory[nn_next_idx][1]
-        Xdot_ref = (X_next_ref - X_ref) / (delT*50)
-        Ydot_ref = (Y_next_ref - Y_ref) / (delT*50)
+        speed_scale = 1.0
+        long_look_ahead = 500
+        nn_long_next_idx = nn_idx + long_look_ahead
+        if nn_long_next_idx>=len(trajectory)-1:
+            # print("longi near end")
+            nn_long_next_idx = len(trajectory)-1
+        X_long_next_ref = trajectory[nn_long_next_idx][0]
+        Y_long_next_ref = trajectory[nn_long_next_idx][1]
+        Xdot_ref = (X_long_next_ref - X) / (delT*long_look_ahead)
+        Ydot_ref = (Y_long_next_ref - Y) / (delT*long_look_ahead)
         xdot_ref, ydot_ref = self.global2inertial(Xdot_ref, Ydot_ref, psi)
 
-        psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
+        # straight line boost
+        psi_long_ref = math.atan2(Y_long_next_ref - Y, X_long_next_ref - X)
+        error_psi_long = self.wrapAngle(psi_long_ref) - self.wrapAngle(psi)
+        longi_scale = 1.0
+        if np.abs(error_psi_long)<20*math.pi/180:
+            # print("straight!")
+            longi_scale = 3.0
 
         # ---------------|Lateral Controller|-------------------------
         """
@@ -123,7 +137,7 @@ class CustomController(BaseController):
         """
         Please design your longitudinal controller below.
         """
-        error_x = xdot_ref * speed_scale - xdot
+        error_x = xdot_ref * speed_scale * longi_scale - xdot
         self.sum_error_x += error_x * delT
         F = self.kp_x * error_x + \
             self.ki_x * self.sum_error_x + \
