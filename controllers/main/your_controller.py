@@ -34,16 +34,18 @@ class CustomController(BaseController):
         # pid params
         self.kp_x = 50000.0
         self.ki_x = 150.0
-        self.kd_x = 150.0
-        self.kp_psi = 15.0
-        self.ki_psi = 1.0
-        self.kd_psi = 4.0
+        self.kd_x = 100.0
+        self.kp_psi = 5.0
+        self.ki_psi = 0.5
+        self.kd_psi = 0.3
 
         #
         self.sum_error_x = 0.0
         self.error_x_old = 0.0
         self.sum_error_psi = 0.0
         self.error_psi_old = 0.0
+
+        self.lat_look_ahead = 80
 
     def inertial2global(self, x, y, psi):
         # convert (x, y) from inertial frame to global frame
@@ -90,7 +92,7 @@ class CustomController(BaseController):
 
         # preprocessing the reference trajectory
         # lateral preprocessing
-        lat_look_ahead = 80
+        lat_look_ahead = self.lat_look_ahead
         XTE, nn_idx = closestNode(X, Y, trajectory)
         nn_lat_next_idx = nn_idx + lat_look_ahead
         if nn_lat_next_idx>=len(trajectory)-1:
@@ -101,10 +103,13 @@ class CustomController(BaseController):
         psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
         speed_scale = 1.0
-        long_look_ahead = 500
+        longi_scale = 1.0
+        long_look_ahead = 600
         nn_long_next_idx = nn_idx + long_look_ahead
         if nn_long_next_idx>=len(trajectory)-1:
             # print("longi near end")
+            # longi_scale = 10.0
+            long_look_ahead = len(trajectory)-1-nn_idx
             nn_long_next_idx = len(trajectory)-1
         X_long_next_ref = trajectory[nn_long_next_idx][0]
         Y_long_next_ref = trajectory[nn_long_next_idx][1]
@@ -115,10 +120,16 @@ class CustomController(BaseController):
         # straight line boost
         psi_long_ref = math.atan2(Y_long_next_ref - Y, X_long_next_ref - X)
         error_psi_long = self.wrapAngle(psi_long_ref) - self.wrapAngle(psi)
-        longi_scale = 1.0
         if np.abs(error_psi_long)<20*math.pi/180:
             # print("straight!")
-            longi_scale = 3.0
+            longi_scale = 3.5
+            self.kp_psi = 5.0
+            self.kd_psi = 0.2
+            self.lat_look_ahead = 30
+        else:
+            self.kp_psi = 300.0
+            self.kd_psi = 10.0
+            self.lat_look_ahead = 100
 
         # ---------------|Lateral Controller|-------------------------
         """
