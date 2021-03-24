@@ -102,7 +102,7 @@ class CustomController(BaseController):
         Y_next_ref = trajectory[nn_lat_next_idx][1]
         psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
-        speed_scale = 0.85
+        speed_scale = 0.8
         longi_scale = 1.0
         long_look_ahead = 500
         nn_long_next_idx = nn_idx + long_look_ahead
