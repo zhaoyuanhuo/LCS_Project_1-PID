@@ -123,12 +123,14 @@ class CustomController(BaseController):
         if np.abs(error_psi_long)<20*math.pi/180:
             # print("straight!")
             longi_scale = 4.0
+            self.kd_x = 20.0
             self.kp_psi = 5.0
-            self.kd_psi = 0.2
+            self.kd_psi = 1.5
             self.lat_look_ahead = 30
         else:
+            self.kd_x = 100.0
             self.kp_psi = 300.0
-            self.kd_psi = 10.0
+            self.kd_psi = 30.0
             self.lat_look_ahead = 100
 
         # ---------------|Lateral Controller|-------------------------
