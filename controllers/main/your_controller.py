@@ -102,7 +102,7 @@ class CustomController(BaseController):
         Y_next_ref = trajectory[nn_lat_next_idx][1]
         psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
-        speed_scale = 1.0
+        speed_scale = 0.85
         longi_scale = 1.0
         long_look_ahead = 600
         nn_long_next_idx = nn_idx + long_look_ahead
@@ -122,7 +122,7 @@ class CustomController(BaseController):
         error_psi_long = self.wrapAngle(psi_long_ref) - self.wrapAngle(psi)
         if np.abs(error_psi_long)<20*math.pi/180:
             # print("straight!")
-            longi_scale = 3.5
+            longi_scale = 4.0
             self.kp_psi = 5.0
             self.kd_psi = 0.2
             self.lat_look_ahead = 30
