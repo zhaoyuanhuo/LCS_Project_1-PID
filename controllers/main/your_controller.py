@@ -45,6 +45,7 @@ class CustomController(BaseController):
         self.sum_error_psi = 0.0
         self.error_psi_old = 0.0
 
+        self.long_look_ahead = 500
         self.lat_look_ahead = 80
 
     def inertial2global(self, x, y, psi):
@@ -92,6 +93,7 @@ class CustomController(BaseController):
 
         # preprocessing the reference trajectory
         # lateral preprocessing
+        long_look_ahead = self.long_look_ahead
         lat_look_ahead = self.lat_look_ahead
         XTE, nn_idx = closestNode(X, Y, trajectory)
         nn_lat_next_idx = nn_idx + lat_look_ahead
@@ -102,9 +104,9 @@ class CustomController(BaseController):
         Y_next_ref = trajectory[nn_lat_next_idx][1]
         psi_ref = math.atan2(Y_next_ref-Y, X_next_ref-X)
 
-        speed_scale = 0.8
+        speed_scale = 1.1
         longi_scale = 1.0
-        long_look_ahead = 400
+
         nn_long_next_idx = nn_idx + long_look_ahead
         if nn_long_next_idx>=len(trajectory)-1:
             # print("longi near end")
@@ -120,20 +122,48 @@ class CustomController(BaseController):
         # straight line boost
         psi_long_ref = math.atan2(Y_long_next_ref - Y, X_long_next_ref - X)
         error_psi_long = self.wrapAngle(psi_long_ref) - self.wrapAngle(psi)
-        if np.abs(error_psi_long)<20*math.pi/180: # straight
+        if np.abs(error_psi_long)<15*math.pi/180: # straight
             # print("straight!")
             longi_scale = 4.0
-            self.kd_x = 20.0
+            self.kd_x = 5.0
 
             self.kp_psi = 5.0
             self.kd_psi = 0.7
-            self.lat_look_ahead = 20
-        else: # curb
+            self.lat_look_ahead = 30
+            self.long_look_ahead = 600
+        elif np.abs(error_psi_long)<30*math.pi/180: # curb
+            print("small angle is", np.abs(error_psi_long))
+
+            longi_scale = 2.5
+
             self.kd_x = 100.0
 
-            self.kp_psi = 300.0
+            self.kp_psi = 30.0
             self.kd_psi = 5.0
-            self.lat_look_ahead = 100
+            self.lat_look_ahead = 75
+            self.long_look_ahead = 600
+        elif np.abs(error_psi_long)<45*math.pi/180: # curb
+            print("median angle is", np.abs(error_psi_long))
+
+            longi_scale = 0.8
+
+            self.kd_x = 50.0
+
+            self.kp_psi = 200.0
+            self.kd_psi = 5.0
+            self.lat_look_ahead = 150
+            self.long_look_ahead = 600
+        else: # curb
+            print("large angle is", np.abs(error_psi_long))
+            longi_scale = 0.7
+
+            self.kd_x = 25.0
+
+            self.kp_psi = 400.0
+            self.ki_psi = 10.0
+            self.kd_psi = 5.0
+            self.lat_look_ahead = 180
+            self.long_look_ahead = 600
 
         # ---------------|Lateral Controller|-------------------------
         """
