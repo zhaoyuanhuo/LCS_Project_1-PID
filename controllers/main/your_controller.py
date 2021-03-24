@@ -104,7 +104,7 @@ class CustomController(BaseController):
 
         speed_scale = 0.8
         longi_scale = 1.0
-        long_look_ahead = 500
+        long_look_ahead = 400
         nn_long_next_idx = nn_idx + long_look_ahead
         if nn_long_next_idx>=len(trajectory)-1:
             # print("longi near end")
@@ -126,13 +126,13 @@ class CustomController(BaseController):
             self.kd_x = 20.0
 
             self.kp_psi = 5.0
-            self.kd_psi = 0.5
-            self.lat_look_ahead = 30
+            self.kd_psi = 0.7
+            self.lat_look_ahead = 20
         else: # curb
             self.kd_x = 100.0
 
             self.kp_psi = 300.0
-            self.kd_psi = 30.0
+            self.kd_psi = 5.0
             self.lat_look_ahead = 100
 
         # ---------------|Lateral Controller|-------------------------
