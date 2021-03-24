@@ -120,15 +120,17 @@ class CustomController(BaseController):
         # straight line boost
         psi_long_ref = math.atan2(Y_long_next_ref - Y, X_long_next_ref - X)
         error_psi_long = self.wrapAngle(psi_long_ref) - self.wrapAngle(psi)
-        if np.abs(error_psi_long)<20*math.pi/180:
+        if np.abs(error_psi_long)<20*math.pi/180: # straight
             # print("straight!")
             longi_scale = 4.0
             self.kd_x = 20.0
+
             self.kp_psi = 5.0
-            self.kd_psi = 1.5
+            self.kd_psi = 0.5
             self.lat_look_ahead = 30
-        else:
+        else: # curb
             self.kd_x = 100.0
+
             self.kp_psi = 300.0
             self.kd_psi = 30.0
             self.lat_look_ahead = 100
