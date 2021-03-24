@@ -104,7 +104,7 @@ class CustomController(BaseController):
 
         speed_scale = 0.85
         longi_scale = 1.0
-        long_look_ahead = 600
+        long_look_ahead = 500
         nn_long_next_idx = nn_idx + long_look_ahead
         if nn_long_next_idx>=len(trajectory)-1:
             # print("longi near end")
