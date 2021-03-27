@@ -36,7 +36,7 @@ class CustomController(BaseController):
         self.ki_x = 150.0
         self.kd_x = 100.0
         self.kp_psi = 5.0
-        self.ki_psi = 0.5
+        self.ki_psi = 0.1
         self.kd_psi = 0.3
 
         #
@@ -134,7 +134,7 @@ class CustomController(BaseController):
         elif np.abs(error_psi_long)<30*math.pi/180: # curb
             print("small angle is", np.abs(error_psi_long))
 
-            longi_scale = 2.5
+            longi_scale = 3.0
 
             self.kd_x = 100.0
 
