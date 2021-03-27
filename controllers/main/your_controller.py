@@ -153,7 +153,7 @@ class CustomController(BaseController):
             self.kd_psi = 5.0
             self.lat_look_ahead = 150
             self.long_look_ahead = 600
-        else: # curb
+        elif np.abs(error_psi_long)<85*math.pi/180: # curb
             print("large angle is", np.abs(error_psi_long))
             longi_scale = 0.7
 
@@ -163,6 +163,17 @@ class CustomController(BaseController):
             self.ki_psi = 10.0
             self.kd_psi = 5.0
             self.lat_look_ahead = 180
+            self.long_look_ahead = 600
+        else:
+            print("super large angle is", np.abs(error_psi_long))
+            longi_scale = 0.7
+
+            self.kd_x = 25.0
+
+            self.kp_psi = 400.0
+            self.ki_psi = 10.0
+            self.kd_psi = 5.0
+            self.lat_look_ahead = 200
             self.long_look_ahead = 600
 
         # ---------------|Lateral Controller|-------------------------
