@@ -128,7 +128,7 @@ class CustomController(BaseController):
             self.kd_x = 5.0
 
             self.kp_psi = 5.0
-            self.kd_psi = 0.7
+            self.kd_psi = 0.75
             self.lat_look_ahead = 30
             self.long_look_ahead = 600
         elif np.abs(error_psi_long)<30*math.pi/180: # curb
