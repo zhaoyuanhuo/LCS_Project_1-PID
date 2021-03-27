@@ -132,7 +132,7 @@ class CustomController(BaseController):
             self.lat_look_ahead = 30
             self.long_look_ahead = 600
         elif np.abs(error_psi_long)<30*math.pi/180: # curb
-            print("small angle is", np.abs(error_psi_long))
+            # print("small angle is", np.abs(error_psi_long))
 
             longi_scale = 3.0
 
@@ -143,21 +143,21 @@ class CustomController(BaseController):
             self.lat_look_ahead = 75
             self.long_look_ahead = 600
         elif np.abs(error_psi_long)<45*math.pi/180: # curb
-            print("median angle is", np.abs(error_psi_long))
+            # print("median angle is", np.abs(error_psi_long))
 
             longi_scale = 0.8
 
             self.kd_x = 50.0
 
-            self.kp_psi = 150.0
+            self.kp_psi = 100.0
             self.kd_psi = 5.0
             self.lat_look_ahead = 150
             self.long_look_ahead = 600
         elif np.abs(error_psi_long)<85*math.pi/180: # curb
-            print("large angle is", np.abs(error_psi_long))
+            # print("large angle is", np.abs(error_psi_long))
             longi_scale = 0.7
 
-            self.kd_x = 25.0
+            self.kd_x = 5.0
 
             self.kp_psi = 400.0
             self.ki_psi = 10.0
@@ -165,13 +165,13 @@ class CustomController(BaseController):
             self.lat_look_ahead = 180
             self.long_look_ahead = 600
         else:
-            print("super large angle is", np.abs(error_psi_long))
+            # print("super large angle is", np.abs(error_psi_long))
             longi_scale = 0.7
 
-            self.kd_x = 25.0
+            self.kd_x = 5.0
 
             self.kp_psi = 400.0
-            self.ki_psi = 10.0
+            self.ki_psi = 20.0
             self.kd_psi = 5.0
             self.lat_look_ahead = 200
             self.long_look_ahead = 600
