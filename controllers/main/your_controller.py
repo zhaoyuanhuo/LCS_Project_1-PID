@@ -149,7 +149,7 @@ class CustomController(BaseController):
 
             self.kd_x = 50.0
 
-            self.kp_psi = 200.0
+            self.kp_psi = 150.0
             self.kd_psi = 5.0
             self.lat_look_ahead = 150
             self.long_look_ahead = 600
